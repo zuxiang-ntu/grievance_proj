@@ -1,5 +1,3 @@
-## Getting R session and data table ready
-#################
 .libPaths("C:\\Users\\ASEuser\\OneDrive - Nanyang Technological University\\NTU RA\\Grievance Database-Project docs\\Analysis\\R\\win-library")
 library(openxlsx)
 library(readxl)
@@ -13,10 +11,11 @@ library(janitor)
 library(vcd)
 library(sjPlot)
 library(sjstats)
+#################
 ## Create table for analysis
 # Import database excel
-mydata <- read_excel("C:\\Users\\ASEuser\\OneDrive - Nanyang Technological University\\NTU RA\\Grievance Database-Project docs\\GrievanceProcedure_v2_20220928.xlsx")
-# 1.2 Create base table
+mydata <- read_excel("C:\\Users\\ASEuser\\OneDrive - Nanyang Technological University\\NTU RA\\Grievance Database-Project docs\\GrievanceProcedure_v2_20221006.xlsx")
+# Create analysis table
 table_analysis <- mydata %>%
   transmute(ID = UID, Company = COMPANY, Status = STATUS, Country = COUNTRY, Grievance_raiser = `GRIEVANCE RAISER`, GR_type = `GRIEVANCE RAISER TYPE`,
             Sourcing_rs = `SOURCING RELATION`, Acc_foc_rs = `ACCUSED TO FOCAL RELATIONSHIP`, Int_foc_rs = `INTERMEDIATE COMPANY RELATIONSHIP`,
@@ -65,21 +64,20 @@ table_analysis <- mydata %>%
                                                                 "Supplier support", "Multiplier", "Suspend", "Re-entry")),
          Sourcing_rs= factor(Sourcing_rs,levels = c("Vertical-1", "Vertical-2", "Direct-1", "Direct-2", "Indirect", 
                                         "Unable to determine", "Not in supply chain", "NA")))
-# Date as numeric
+# Format dates to calculate duration
 Date_lodged <- excel_numeric_to_date(as.numeric(mydata$`DATE LODGED`))
 Date_closed <- excel_numeric_to_date(as.numeric(mydata$`DATE CLOSED`))
-Date_last_purchase <- excel_numeric_to_date(as.numeric(mydata$`DATE PURCHASE`))
-Date_reentry <- excel_numeric_to_date(as.numeric(mydata$`DATE ENTRY`))
-Date_first_engagement <- excel_numeric_to_date(as.numeric(mydata$`DATE ENGAGEMENT`))
-
-# Duration columns
+Date_last_purchase <- excel_numeric_to_date(as.numeric(mydata$`DATE LAST PURCHASE`))
+Date_reentry <- excel_numeric_to_date(as.numeric(mydata$`DATE RE-ENTRY`))
+Date_first_engagement <- excel_numeric_to_date(as.numeric(mydata$`DATE FIRST ENGAGEMENT`))
+# Add duration columns to "table_analysis"
 table_analysis <- table_analysis %>% mutate(Duration_lodged_closed = time_length(interval(Date_lodged, Date_closed), unit="months"),
                                             Duration_lastpurchase_reentry = time_length(interval(Date_last_purchase, Date_reentry), unit="months"),
                                             Duration_first_engagement = as.numeric(Date_first_engagement - Date_lodged)) %>%
+  mutate(Duration_lodged_closed = replace(Duration_lodged_closed, which(Duration_lodged_closed < 0), NA),
+         Duration_lastpurchase_reentry = replace(Duration_lastpurchase_reentry, which(Duration_lastpurchase_reentry < 0), NA),
+         Duration_first_engagement = replace(Duration_first_engagement, which(Duration_first_engagement < 0), NA)) %>%
   relocate(c(Duration_lodged_closed, Duration_lastpurchase_reentry, Duration_first_engagement), .after = Country)
-table_analysis$Duration_lodged_closed <- replace(table_analysis$Duration_lodged_closed, which(table_analysis$Duration_lodged_closed < 0), NA)
-table_analysis$Duration_lastpurchase_reentry <- replace(table_analysis$Duration_lastpurchase_reentry, which(table_analysis$Duration_lastpurchase_reentry < 0), NA)
-table_analysis$Duration_first_engagement <- replace(table_analysis$Duration_first_engagement, which(table_analysis$Duration_first_engagement < 0), NA)
 
 # Data string for melting to long format
 string_subtheme <- c('ST_deforestation', 'ST_peat_development', 'ST_fire',
@@ -109,21 +107,20 @@ string_T2_outcome <- c('T2_stop_harm', 'T2_land_assessment', 'T2_corrective_acti
 
 #################
 ## Descriptive results
+## Note: I chose to convert tables to csv so that further formatting and changes can be made on excel as I am still unfamiliar with 
+## how to achieve the desired output entirely in code. 
+
 # 1.0 Background
-# Number of cases by company
+# Number of sub-cases by company
 table_analysis %>% filter(Company != "NA") %>%
   freq(Company) %>% write.csv(quote = F)
-# Number of cases by status
+# Number of sub-cases by status
 table_analysis %>% filter(Status != "NA") %>%
   freq(Status) %>% write.csv(quote = F)
-# Number of cases by Country
+# Number of sub-cases by Country
 table_analysis %>% filter(Country != "NA") %>%
   freq(Country, order="freq") %>% write.csv(quote=F)
-# Number of cases by grievance raiser
-table_analysis %>% filter(GR_type != "NA") %>%
-  freq(GR_type, order="freq") %>% write.csv(quote=F)
-table_analysis %>% filter(GR_type %in% "NGO", Grievance_raiser != "NA") %>%
-  freq(Grievance_raiser, order="freq") %>% write.csv(quote=F)
+## Note: number of cases as reported in grievance website was calculated by manually looking at database UID numbers.
 
 # 2.0 Duration
 # Summary stats
@@ -144,177 +141,189 @@ table_analysis %>% filter(Status == "Closed", Duration_lodged_closed != "NA") %>
   labs(x = "Months", y = "Count", title = "Duration of Grievance Resolution")
 
 # 3.1 Theme
-# Stats
-table_analysis %>% filter(Grievance_theme != "NA") %>%
-  freq(Grievance_theme) %>% write.csv(quote = F)
+# Freq table
+table_analysis %>% 
+  filter(Grievance_theme != "NA") %>%
+  group_by(Grievance_theme) %>% summarise(Count = n()) %>%
+  mutate(Percent = round((Count/sum(Count)*100), digits = 1)) %>%
+  write.csv(quote = F)
 # Bar graph
 table_analysis %>% filter(Grievance_theme != "NA") %>%
   ggplot(aes(x=Grievance_theme, fill=Grievance_theme)) + geom_bar() +
   labs(x="Grievance theme", y="Count", fill="Grievance theme", title="Count of Grievance themes")
 
 # 3.2 Sub-Theme
-# 3.2.1 All themes
-# Stats
-table_analysis %>% melt(measure.vars = string_subtheme, variable.name='Sub_theme') %>% 
-  filter(value=="1") %>% freq(Sub_theme) %>% write.csv(quote=F)
+# Freq table
+table_analysis %>% # All sub-themes
+  melt(measure.vars = string_subtheme, variable.name='Sub_theme') %>% filter(value=="1") %>% 
+  group_by(Sub_theme) %>% summarise(Count = n()) %>%
+  mutate(Percent = round((Count/sum(Count)*100), digits = 1)) %>% 
+  write.csv(quote=F, row.names = F)
+table_analysis %>% # Grouped by themes
+  melt(measure.vars = string_subtheme, variable.name='Sub_theme') %>% filter(value=="1") %>%  
+  group_by(Grievance_theme, Sub_theme) %>% summarise(Count = n()) %>%
+  mutate(Percent = round((Count/sum(Count)*100), digits = 1)) %>% 
+  write.csv(quote=F, row.names= F)
 # Bar graph
-table_analysis %>% melt(measure.vars = string_subtheme, variable.name='Sub_theme') %>% 
-  filter(value=="1") %>% ggplot(aes(y = fct_rev(Sub_theme))) + geom_bar() + labs(y = 'Sub theme', title="Count of sub themes")
-# 3.2.2 Environmental theme
-# Stats
-table_analysis %>% melt(measure.vars = string_subtheme, variable.name='Sub_theme') %>% 
-  filter(value=="1", Grievance_theme == "Environmental") %>% freq(Sub_theme) %>% write.csv(quote=F)
-# Bar graph
-table_analysis %>% melt(measure.vars = string_subtheme, variable.name='Sub_theme') %>% 
+table_analysis %>% # All sub-themes
+  melt(measure.vars = string_subtheme, variable.name='Sub_theme') %>% 
+  filter(value=="1") %>% 
+  ggplot(aes(y = fct_rev(Sub_theme))) + geom_bar() + 
+  labs(y = 'Sub theme', title="Count of sub themes")
+table_analysis %>% # Environmental themed
+  melt(measure.vars = string_subtheme, variable.name='Sub_theme') %>% 
   filter(value=="1", Grievance_theme == "Environmental") %>%
-  ggplot(aes(y = fct_rev(Sub_theme), fill=Sub_theme)) + geom_bar() + 
-  labs(y = 'Sub theme', fill="Sub theme", title="Sub themes (Environmental)") + theme(legend.position = "none")
-#3.2.3 Social theme
-# Stats
-table_analysis %>% melt(measure.vars = string_subtheme, variable.name='Sub_theme') %>% 
-  filter(value=="1", Grievance_theme == "Social") %>% freq(Sub_theme) %>% write.csv(quote=F)
-# Bar graph
-table_analysis %>% melt(measure.vars = string_subtheme, variable.name='Sub_theme') %>% 
+  ggplot(aes(y = fct_rev(Sub_theme))) + geom_bar() + 
+  labs(y = 'Sub theme', x="Count", title="Sub themes (Environmental)")
+table_analysis %>% # Social themed
+  melt(measure.vars = string_subtheme, variable.name='Sub_theme') %>% 
   filter(value=="1", Grievance_theme == "Social") %>%
-  ggplot(aes(y = fct_rev(Sub_theme), fill=Sub_theme)) + geom_bar() + labs(y = 'Sub theme', fill="Sub theme", title="Sub themes (Social)") +
-  theme(legend.position = "none")
-#3.2.3 Both theme
-# Stats
-table_analysis %>% melt(measure.vars = string_subtheme, variable.name='Sub_theme') %>% 
-  filter(value=="1", Grievance_theme == "Both") %>% freq(Sub_theme) %>% write.csv(quote=F)
-# Bar graph
-table_analysis %>% melt(measure.vars = string_subtheme, variable.name='Sub_theme') %>% 
+  ggplot(aes(y = fct_rev(Sub_theme))) + geom_bar() + 
+  labs(y = 'Sub theme', fill="Sub theme", title="Sub themes (Social)")
+table_analysis %>% # Both themed
+  melt(measure.vars = string_subtheme, variable.name='Sub_theme') %>% 
   filter(value=="1", Grievance_theme == "Both") %>%
-  ggplot(aes(y = fct_rev(Sub_theme), fill=Sub_theme)) + geom_bar() + labs(y = 'Sub theme', title="Sub themes (Both)") + 
-  theme(legend.position = "none")
+  ggplot(aes(y = fct_rev(Sub_theme))) + geom_bar() + labs(y = 'Sub theme', title="Sub themes (Both)")
 
 # 3.3 Issues
-# 3.3.1 All theme
-# Stats
-table_analysis %>%
-  melt(measure.vars = string_issue, variable.name="Issue") %>%
-  filter(value == "1") %>% freq(Issue) %>% write.csv(quote=F)
+# Freq table
+table_analysis %>% # All issues
+  melt(measure.vars = string_issue, variable.name="Issue") %>% 
+  filter(value == "1") %>%
+  group_by(Issue) %>% summarise(Count = n()) %>%
+  mutate(Percent = round((Count/sum(Count)*100), digits = 1))  %>%
+  write.csv(quote=F, row.names=F)
+table_analysis %>% # Grouped by theme
+  melt(measure.vars = string_issue, variable.name="Issue") %>% 
+  filter(value == "1") %>%
+  group_by(Grievance_theme, Issue) %>% summarise(Count = n()) %>%
+  mutate(Percent = round((Count/sum(Count)*100), digits = 1))  %>% 
+  write.csv(quote=F, row.names=F)
 # Bar graph
-table_analysis %>%
-  melt(measure.vars = string_issue, variable.name="Issue") %>%
-  filter(value == "1") %>% ggplot(aes(y=fct_rev(Issue))) + geom_bar() +
+table_analysis %>% # All issues
+  melt(measure.vars = string_issue, variable.name="Issue") %>% 
+  filter(value == "1") %>% 
+  ggplot(aes(y=fct_rev(Issue))) + geom_bar() +
   labs(x = "Count", y="Issue", title="Count of Issues")
-# 3.3.2 Environmental theme
-# Stats
-table_analysis %>%
+table_analysis %>% # Environmental themed
   melt(measure.vars = string_issue, variable.name="Issue") %>%
-  filter(value == "1", Grievance_theme == "Environmental") %>% freq(Issue) %>% write.csv(quote=F)
-# Bar graph
-table_analysis %>%
-  melt(measure.vars = string_issue, variable.name="Issue") %>%
-  filter(value == "1", Grievance_theme=="Environmental") %>% ggplot(aes(y=fct_rev(Issue))) + geom_bar() +
+  filter(value == "1", Grievance_theme=="Environmental") %>%
+  ggplot(aes(y=fct_rev(Issue))) + geom_bar() +
   labs(x = "Count", y="Issue", title="Issues (Environmental")
-# 3.3.3 Social theme
-# Stats
-table_analysis %>%
-  melt(measure.vars = string_issue, variable.name="Issue") %>%
-  filter(value == "1", Grievance_theme == "Social") %>% freq(Issue) %>% write.csv(quote=F)
-# Bar graph
-table_analysis %>%
-  melt(measure.vars = string_issue, variable.name="Issue") %>%
-  filter(value == "1", Grievance_theme=="Social") %>% ggplot(aes(y=fct_rev(Issue))) + geom_bar() +
+table_analysis %>% # Social themed
+  melt(measure.vars = string_issue, variable.name="Issue") %>% 
+  filter(value == "1", Grievance_theme=="Social") %>%
+  ggplot(aes(y=fct_rev(Issue))) + geom_bar() +
   labs(x = "Count", y="Issue", title="Issues (Social")
-# 3.3.4 Both theme
-# Stats
-table_analysis %>%
-  melt(measure.vars = string_issue, variable.name="Issue") %>%
-  filter(value == "1", Grievance_theme == "Both") %>% freq(Issue) %>% write.csv(quote=F)
-# Bar graph
-table_analysis %>%
-  melt(measure.vars = string_issue, variable.name="Issue") %>%
-  filter(value == "1", Grievance_theme=="Both") %>% ggplot(aes(y=fct_rev(Issue))) + geom_bar() +
+table_analysis %>% # Both themed
+  melt(measure.vars = string_issue, variable.name="Issue") %>% 
+  filter(value == "1", Grievance_theme=="Both") %>%
+  ggplot(aes(y=fct_rev(Issue))) + geom_bar() +
   labs(x = "Count", y="Issue", title="Issues (Both")
 
 # 4.0 Sourcing relationship
-# Stats
-table_analysis %>% filter(GC_sourcing != "NA") %>%
-  freq(GC_sourcing) %>% write.csv(quote=F)
+# Freq table
+table_analysis %>% 
+  filter(GC_sourcing != "NA") %>% 
+  group_by(GC_sourcing) %>% summarise(Count = n()) %>%
+  mutate(Percent = round((Count/sum(Count)*100), digits = 1))  %>%
+  write.csv(quote=F, row.names=F)
 # Bar graph
-table_analysis %>% filter(!GC_sourcing %in% c('Unable to determine', 'Not in supply chain', 'NA')) %>%
-  ggplot(aes(x = GC_sourcing, fill=GC_sourcing)) + geom_bar() + labs(x="Sourcing relationship") + theme(legend.position = 0)
+table_analysis %>% 
+  filter(!GC_sourcing %in% c('Unable to determine', 'Not in supply chain', 'NA')) %>%
+  ggplot(aes(x = GC_sourcing, fill=GC_sourcing)) + geom_bar() +
+  labs(x="Sourcing relationship") + theme(legend.position = 0)
 
 # 4.1 Sourcing by Engagement channel
 # Bar graph of counts
-table_analysis %>% melt(measure.vars= c('Channel_direct', 'Channel_indirect', 'Channel_strategic_alliance', 'Channel_third_party'),
+table_analysis %>%
+  melt(measure.vars= c('Channel_direct', 'Channel_indirect', 'Channel_strategic_alliance', 'Channel_third_party'),
                         variable.name = "channel") %>%
   filter(!GC_sourcing %in% c('Unable to determine', 'Not in supply chain', 'NA'), value== "1") %>%
-  ggplot(aes(x= GC_sourcing, fill=channel)) + geom_bar() + labs(x="Sourcing relationship", fill="Engagement channel") +
+  ggplot(aes(x= GC_sourcing, fill=channel)) + geom_bar() + 
+  labs(x="Sourcing relationship", fill="Engagement channel") + 
   scale_fill_discrete(labels = c("Direct", "Indirect", "Strategic alliance", "Third party"))
 # Bar graph of proportions
-table_analysis %>% melt(measure.vars= c('Channel_direct', 'Channel_indirect', 'Channel_strategic_alliance', 'Channel_third_party'),
+table_analysis %>% 
+  melt(measure.vars= c('Channel_direct', 'Channel_indirect', 'Channel_strategic_alliance', 'Channel_third_party'),
                         variable.name = "channel") %>%
   filter(!GC_sourcing %in% c('Unable to determine', 'Not in supply chain', 'NA'), value== "1") %>%
-  ggplot(aes(x= GC_sourcing, fill=channel)) + geom_bar(position="fill") + labs(x="Sourcing relationship", fill="Engagement channel") +
+  ggplot(aes(x= GC_sourcing, fill=channel)) + geom_bar(position="fill") + 
+  labs(x="Sourcing relationship", fill="Engagement channel") +
   scale_fill_discrete(labels = c("Direct", "Indirect", "Strategic alliance", "Third party")) +
   scale_y_continuous(labels = scales::percent) + theme(axis.title.y = element_blank())
-# Table of counts
-table_analysis %>% melt(measure.vars= c('Channel_direct', 'Channel_indirect', 'Channel_strategic_alliance', 'Channel_third_party'),
+# Freq table
+table_analysis %>% 
+  melt(measure.vars= c('Channel_direct', 'Channel_indirect', 'Channel_strategic_alliance', 'Channel_third_party'),
                         variable.name = "channel") %>%
   filter(!GC_sourcing %in% c('Unable to determine', 'Not in supply chain', 'NA'), value== "1") %>%
-  group_by(GC_sourcing, channel) %>% summarise(count = n()) %>% write.csv(quote=F, row.names = F)
+  group_by(GC_sourcing, channel) %>% summarise(Count = n()) %>%
+  mutate(Percent = round((Count/sum(Count)*100), digits = 1))  %>% 
+  write.csv(quote=F, row.names = F)
 
 # 5.0 Focal company
 # 5.1 Focal company process
-# Stats
-table_analysis %>% melt(measure.vars=string_Focal_process, variable.name="Focal_process") %>%
-  filter(value=="1") %>% freq(Focal_process) %>% write.csv(quote=F)
+# Freq table
+table_analysis %>% 
+  melt(measure.vars=string_Focal_process, variable.name="Focal_process") %>% filter(value=="1") %>% 
+  group_by(Focal_process) %>% summarise(Count = n()) %>%
+  mutate(Percent = round((Count/sum(Count)*100), digits = 1)) %>% 
+  write.csv(quote=F, row.names=F)
 # Bar graph
-table_analysis %>% melt(measure.vars=string_Focal_process, variable.name="Focal_process") %>%
-  filter(value=="1") %>% ggplot(aes(y = fct_rev(Focal_process))) + geom_bar() + labs(y="Focal process")
-# 5.2 Focal company supplier engagement
-# Stats
-table_analysis %>% filter(Engagement_nature != "NA") %>% 
-  freq(Engagement_nature) %>% write.csv(quote=F)
-# Bar graph
-table_analysis %>% filter(Engagement_nature != "NA") %>%
-  ggplot(aes(x='', fill=Engagement_nature)) + geom_bar(position="fill") + 
-  labs(x="Engagement nature", y="", fill="Engagement nature") + scale_y_continuous(labels=scales::percent) +
-  scale_fill_discrete(labels=c("Both: 31%", "Coercive: 17%", "Cooperative: 52%"))
-# 5.3 Focal company resolution action
-# Stats
-table_analysis %>% filter(Focal_resolution != "NA") %>%
-  freq(Focal_resolution, order = '-freq') %>% write.csv(quote=F)
+table_analysis %>% 
+  melt(measure.vars=string_Focal_process, variable.name="Focal_process") %>% filter(value=="1") %>% 
+  ggplot(aes(y = fct_rev(Focal_process))) + geom_bar() + 
+  labs(y="Focal process")
+# 5.2 Focal company resolution action
+# Freq table
+table_analysis %>% 
+  filter(Focal_resolution != "NA") %>%
+  group_by(Focal_resolution) %>% summarise(Count = n()) %>%
+  mutate(Percent = round((Count/sum(Count)*100), digits = 1)) %>%
+  arrange(Count) %>%
+  write.csv(quote=F, row.names=F)
 # Bar graph 
 table_analysis %>% filter(Focal_resolution != "NA") %>%
   ggplot(aes(x='', fill= fct_rev(fct_infreq(Focal_resolution)))) + geom_bar(position="fill") +
-  labs(x='Focal company resolution action',y='', fill="Resolution action") + scale_y_continuous(labels=scales::percent) +
+  labs(x='Focal company resolution action',y='', fill="Resolution action") + 
+  scale_y_continuous(labels=scales::percent) +
   scale_fill_discrete(labels=c("Coop-SCM, Coer-SCM: 1%", "Improve company practice: 2%", "Remedial: 3%",
                                "Coop-SCM: 11%", "Re-entry: 20%", "Coer-SCM: 63%"))
+# 5.3 Focal company supplier engagement
+# Freq table
+table_analysis %>% 
+  filter(Engagement_nature != "NA") %>% 
+  group_by(Engagement_nature) %>% summarise(Count = n()) %>%
+  mutate(Percent = round((Count/sum(Count)*100), digits = 1)) %>% 
+  write.csv(quote=F, row.names=F)
+# Bar graph
+table_analysis %>% filter(Engagement_nature != "NA") %>%
+  ggplot(aes(x='', fill=Engagement_nature)) + geom_bar(position="fill") + 
+  labs(x="Engagement nature", y="", fill="Engagement nature") + 
+  scale_y_continuous(labels=scales::percent) +
+  scale_fill_discrete(labels=c("Both: 31%", "Coercive: 17%", "Cooperative: 52%"))
 
 # 6.0 Overall grievance outcomes
-# Stats
-table_analysis %>% filter(!is.na(Grievance_outcome)) %>%
-  freq(Grievance_outcome) %>% write.csv(quote=F)
+# Freq table
+table_analysis %>% 
+  filter(!is.na(Grievance_outcome)) %>%
+  group_by(Grievance_outcome) %>% summarise(Count = n()) %>%
+  mutate(Percent = round((Count/sum(Count)*100), digits = 1)) %>% 
+  write.csv(quote=F, row.names=F)
 # Bar graph
 table_analysis %>% filter(!is.na(Grievance_outcome))  %>%
   ggplot(aes(x='', fill= fct_rev(fct_infreq(Grievance_outcome)))) + geom_bar(position="fill") +
-  scale_y_continuous(labels=scales::percent) + labs(x='Overall grievance outcome', y='', fill='') +
+  labs(x='Overall grievance outcome', y='', fill='') +
+  scale_y_continuous(labels=scales::percent) + 
   scale_fill_discrete(labels=c('Direct action: 2%', 'Supplier support: 4%', 'Nullified: 5%', 'Policy compliance: 5%',
                             'Re-entry: 7%', 'Multiplier: 9%', 'Suspend: 25%', 'Monitor: 43%'))
 
 # 7.0 Grievance characteristics
-# Stats
-table_analysis %>% filter(Company != "NA") %>% 
-  melt(measure.vars=c("GC_clarity", "GC_status", "GC_number", "GC_sourcing")) %>%
-  group_by(variable) %>% count(value) %>% mutate(prop = 100*n/sum(n)) %>% write.csv(quote=F, row.names=F)
-# Bar graph
-table_analysis %>% filter(Company != "NA") %>% 
-  melt(measure.vars=c("GC_clarity", "GC_status", "GC_number", "GC_sourcing")) %>%
-  ggplot(aes(x=variable, fill=value)) + geom_bar() + scale_fill_discrete()
-# Complexity score
-# Stats
-table_analysis %>%  
-  summarise(min = min(Complexity, na.rm = T), quant1 = quantile(Complexity, probs = 0.25, na.rm = T), 
-            med = median(Complexity, na.rm = T), mean = mean(Complexity, na.rm = T),
-            quant3 = quantile(Complexity, probs = 0.75, na.rm = T), max = max(Complexity, na.rm = T)) %>%
-  write.csv(quote=F, row.names = F)
-# Histogram
-table_analysis %>% ggplot(aes(x=Complexity)) + geom_histogram(binwidth=1)
-
-table_analysis %>% filter(Grievance_outcome != "NA") %>%
-  ggplot(aes(y=Grievance_outcome, x=Complexity)) + geom_point() +geom_jitter()
+# Freq table
+table_analysis %>% 
+  filter(Company != "NA") %>% 
+  melt(measure.vars=c("GC_clarity", "GC_status", "GC_number", "GC_sourcing"),
+       variable.name = "Characteristic", value.name = "Measure") %>%
+  group_by(Characteristic) %>% count(Measure) %>% 
+  mutate(Percent = round((100*n/sum(n)), digits = 1)) %>% 
+  write.csv(quote=F, row.names=F)
