@@ -1,24 +1,27 @@
-## Preparing R session
+## Code to create dataframe table from csv file that will be used for analysis. Also has data objects to help
+## reshape data from wide to long format
 # library path, if needed
 .libPaths("C:\\Users\\ASEuser\\OneDrive - Nanyang Technological University\\NTU RA\\Grievance Database-Project docs\\Analysis\\R\\win-library")
 # Packages used 
 library(readxl)   # read excel
-library(tidyverse)# core functions
+library(tidyverse)# core functions, cite
 library(rlang)    # support tidyverse features
 library(ggpubr)   # arrange multiple plots in single figure
-library(summarytools) # create data summaries like freq table
+library(summarytools) # create data summaries like freq table, cite
 library(lubridate)# work with dates and time, calculate interval
 library(reshape2) # change data to long format
 library(janitor) # help change date to numeric
-library(ggmosaic) # make mosaic plots in ggplot, without stats
-library(sjPlot) # make nice contingency tables with stats
+library(ggmosaic) # make mosaic plots in ggplot, without stats, cite
+library(sjPlot) # make nice contingency tables with stats, cite
+library(RColorBrewer) # change color palette, cite
+library(rcompanion) # conduct cramer V test
 library(vcd) # make mosaic plots with stats
-library(RColorBrewer) # change color palette
+library(nnet) # conduct multinomial regression
 library(readr)
 library(sjstats) 
 # Import excel database
-mydata <- read_excel("C:\\Users\\ASEuser\\OneDrive - Nanyang Technological University\\NTU RA\\Grievance Database-Project docs\\GrievanceProcedure_v2_20221022.xlsx")
-# Create table for analysis
+mydata <- read_excel("C:\\Users\\ASEuser\\OneDrive - Nanyang Technological University\\NTU RA\\Grievance Database-Project docs\\GrievanceProcedure_v2_20221111.xlsx")
+# Create table for analysis. This dataset is used for all subsequent analysis. 
 table_analysis <- mydata %>%
   transmute(ID = UID, Company = COMPANY, Status = STATUS, Country = COUNTRY, Grievance_raiser = `GRIEVANCE RAISER`, GR_type = `GRIEVANCE RAISER TYPE`,
             Acc_foc_rs = `ACCUSED TO FOCAL RELATIONSHIP`, Int_foc_rs = `INTERMEDIATE COMPANY RELATIONSHIP`,
@@ -56,20 +59,16 @@ table_analysis <- mydata %>%
             GC_sourcing = `SOURCING RELATIONSHIP`, Complexity = as.numeric(`COMPLEXITY SCORE`), Grievance_outcome = `GRIEVANCE OUTCOME`) %>%
   mutate(Grievance_outcome = factor(Grievance_outcome, levels=c("Nullified", "Monitor", "Direct action", "Policy compliance",
                                                                 "Supplier support", "Multiplier", "Suspend", "Re-entry")))
-# Format dates to calculate duration
+# Format dates as numeric to calculate duration
 Date_lodged <- excel_numeric_to_date(as.numeric(mydata$`DATE LODGED`))
 Date_closed <- excel_numeric_to_date(as.numeric(mydata$`DATE CLOSED`))
 Date_last_purchase <- excel_numeric_to_date(as.numeric(mydata$`DATE LAST PURCHASE`))
 Date_reentry <- excel_numeric_to_date(as.numeric(mydata$`DATE RE-ENTRY`))
 Date_first_engagement <- excel_numeric_to_date(as.numeric(mydata$`DATE FIRST ENGAGEMENT`))
-# Add duration columns to "table_analysis"
-table_analysis <- table_analysis %>% mutate(Duration_lodged_closed = time_length(interval(Date_lodged, Date_closed), unit="months"),
-                                            Duration_lastpurchase_reentry = time_length(interval(Date_last_purchase, Date_reentry), unit="months"),
-                                            Duration_first_engagement = as.numeric(Date_first_engagement - Date_lodged)) %>%
-  relocate(c(Duration_lodged_closed, Duration_lastpurchase_reentry, Duration_first_engagement), .after = Country) %>%
-  mutate(Duration_lodged_closed = replace(Duration_lodged_closed, which(Duration_lodged_closed < 0), NA),
-         Duration_lastpurchase_reentry = replace(Duration_lastpurchase_reentry, which(Duration_lastpurchase_reentry < 0), NA),
-         Duration_first_engagement = replace(Duration_first_engagement, which(Duration_first_engagement < 0), NA))
+# Add duration columns to "table_analysis" dataset
+table_analysis <- table_analysis %>% mutate(Duration_lodged_closed = time_length(interval(Date_lodged, Date_closed), unit="months")) %>%
+  relocate(Duration_lodged_closed, .after = Country) %>%
+  mutate(Duration_lodged_closed = replace(Duration_lodged_closed, which(Duration_lodged_closed < 0), NA))
 
 # Data string for melting to long format
 string_subtheme <- c('ST_deforestation', 'ST_peat_development', 'ST_fire',
