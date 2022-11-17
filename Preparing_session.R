@@ -62,9 +62,6 @@ table_analysis <- mydata %>%
 # Format dates as numeric to calculate duration
 Date_lodged <- excel_numeric_to_date(as.numeric(mydata$`DATE LODGED`))
 Date_closed <- excel_numeric_to_date(as.numeric(mydata$`DATE CLOSED`))
-Date_last_purchase <- excel_numeric_to_date(as.numeric(mydata$`DATE LAST PURCHASE`))
-Date_reentry <- excel_numeric_to_date(as.numeric(mydata$`DATE RE-ENTRY`))
-Date_first_engagement <- excel_numeric_to_date(as.numeric(mydata$`DATE FIRST ENGAGEMENT`))
 # Add duration columns to "table_analysis" dataset
 table_analysis <- table_analysis %>% mutate(Duration_lodged_closed = time_length(interval(Date_lodged, Date_closed), unit="months")) %>%
   relocate(Duration_lodged_closed, .after = Country) %>%
