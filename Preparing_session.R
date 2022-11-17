@@ -1,7 +1,6 @@
 ## Code to create dataframe table from csv file that will be used for analysis. Also has data objects to help
 ## reshape data from wide to long format
-# library path, if needed
-.libPaths("C:\\Users\\ASEuser\\OneDrive - Nanyang Technological University\\NTU RA\\Grievance Database-Project docs\\Analysis\\R\\win-library")
+
 # Packages used 
 library(readxl)   # read excel
 library(tidyverse)# core functions, cite
@@ -19,8 +18,10 @@ library(vcd) # make mosaic plots with stats
 library(nnet) # conduct multinomial regression
 library(readr)
 library(sjstats) 
+
 # Import excel database
 mydata <- read_excel("C:\\Users\\ASEuser\\OneDrive - Nanyang Technological University\\NTU RA\\Grievance Database-Project docs\\GrievanceProcedure_v2_20221111.xlsx")
+
 # Create table for analysis. This dataset is used for all subsequent analysis. 
 table_analysis <- mydata %>%
   transmute(ID = UID, Company = COMPANY, Status = STATUS, Country = COUNTRY, Grievance_raiser = `GRIEVANCE RAISER`, GR_type = `GRIEVANCE RAISER TYPE`,
@@ -63,9 +64,15 @@ table_analysis <- mydata %>%
 Date_lodged <- excel_numeric_to_date(as.numeric(mydata$`DATE LODGED`))
 Date_closed <- excel_numeric_to_date(as.numeric(mydata$`DATE CLOSED`))
 # Add duration columns to "table_analysis" dataset
-table_analysis <- table_analysis %>% mutate(Duration_lodged_closed = time_length(interval(Date_lodged, Date_closed), unit="months")) %>%
+table_analysis <- table_analysis %>% 
+  mutate(Duration_lodged_closed = time_length(interval(Date_lodged, Date_closed), unit="months")) %>%
   relocate(Duration_lodged_closed, .after = Country) %>%
   mutate(Duration_lodged_closed = replace(Duration_lodged_closed, which(Duration_lodged_closed < 0), NA))
+# Filter out rows that are all NA. These are rows where cases were split only to capture geographical information
+# while other columns were NA
+table_analysis <-
+  table_analysis %>%
+  filter(Company != "NA")
 
 # Data string for melting to long format
 string_subtheme <- c('ST_deforestation', 'ST_peat_development', 'ST_fire',
