@@ -1,6 +1,6 @@
 ## 3.7 Complexity and characteristics vs. Duration
 
-# Figure 9a. Complexity vs duration
+# Figure 9. Complexity vs duration
 # Stats table object to plot median and mean
 stats_complexity_dur <- table_analysis %>% 
   filter(Status=="Closed", Complexity != "NA") %>%
@@ -9,15 +9,15 @@ stats_complexity_dur <- table_analysis %>%
             Mean = round((mean(Duration_lodged_closed, na.rm = T)), digits=1)) %>%
   melt(id.vars="Complexity")
 # Figure
-plot_complexity_duration <- 
-  table_analysis %>% 
+table_analysis %>% 
   filter(Status=="Closed", Complexity != "NA") %>%
   ggplot(aes(x = Complexity, y = Duration_lodged_closed)) + 
   geom_jitter(position = position_jitter(0.2, 0.2), alpha=0.2) +
   geom_line(data= stats_complexity_dur,
             aes(x=Complexity, y=value, linetype=variable), size=1) + 
   scale_x_continuous(n.breaks= 8) +
-  labs(x = "", y = "Duration (months)", linetype="", title= "(a)") +
+  scale_linetype_manual(values= c(2,1)) +
+  labs(x = "", y = "Duration (months)", linetype="") +
   theme(axis.title = element_text(size = 12), axis.text = element_text(size=11.5))
 # sample size
 table_analysis %>% 
@@ -30,6 +30,8 @@ lm(Duration_lodged_closed ~ Complexity,
      filter(Status=="Closed")) %>% 
   summary()
 
+#####
+# Code for additional info
 # Figure 9b. Allegation clarity vs duration
 # Stats table to plot median and mean
 stats_clarity_dur <-
@@ -199,8 +201,7 @@ lm(Duration_lodged_closed ~ Grievance_theme,
 ggarrange(plot_complexity_duration, plot_clarity_duration, plot_status_duration, 
           plot_aggrieved_duration, plot_sourcing_duration, plot_theme_duration,
           ncol=2, nrow=3, common.legend = T)
-#####
-# Code for additional info
+
 # Alt plot complexity v. duration, fitted linear regression line
 table_analysis %>% 
   filter(Status=="Closed", Complexity != "NA") %>%

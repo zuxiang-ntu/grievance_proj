@@ -13,10 +13,10 @@ table_analysis %>%
 table_analysis %>% 
   filter(Complexity != "NA") %>%
   ggplot() + 
-  geom_histogram(aes(x = Complexity, alpha = 1), binwidth=1, boundary = 0, closed = "left") +
+  geom_histogram(aes(x = Complexity), binwidth=1, boundary = 0, closed = "left", fill= '#1F78B4') +
   scale_x_continuous(n.breaks = 7) +
-  geom_vline(xintercept = 6, size = 1) + # median
-  geom_vline(xintercept = 6.7, size = 1, linetype = 2) + # mean
+  geom_vline(xintercept = 6, size = 1, linetype= 2) + # median
+  geom_vline(xintercept = 6.7, size = 1, linetype = 1) + # mean
   annotate("text", x = c(5.4, 7.4), y = c(110, 110), 
            label = c("Median: 6", "Mean: 6.7"),
            fontface="bold") +

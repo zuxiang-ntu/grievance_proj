@@ -12,13 +12,13 @@ table_analysis %>%
 # Figure 7. Frequency of cases based on duration of grievance resolution, with mean and median
 table_analysis %>% 
   filter(Duration_lodged_closed != "NA") %>%
-  ggplot(aes(x = Duration_lodged_closed, alpha=1)) + 
-  geom_histogram(bins = 30, boundary = 0, closed = "left") + 
+  ggplot(aes(x = Duration_lodged_closed)) + 
+  geom_histogram(bins = 30, boundary = 0, closed = "left", fill= '#1F78B4') + 
   scale_x_continuous(breaks = c(0, 2, 4, 6, 8 ,10, 12, 14, 16, 18, 20, 22, 24, 26, 28, 30,
                                 32, 34, 36, 38, 40, 42, 44, 46, 48, 50, 52, 54, 56, 58, 
                                 60, 62, 64, 66, 68), minor_breaks = NULL) +
-  geom_vline(xintercept = 11.4, size = 1) +               # median line
-  geom_vline(xintercept = 17.1, size = 1, linetype = 2) + # mean line
+  geom_vline(xintercept = 11.4, size = 1, linetype= 2) +               # median line
+  geom_vline(xintercept = 17.1, size = 1, linetype = 1) + # mean line
   annotate("text", x = c(6.2, 22.5), y = c(22, 22), 
            label = c("Median: 11.4", "Mean: 17.1"),
            fontface="bold", angle=45) +

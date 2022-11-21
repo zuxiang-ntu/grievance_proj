@@ -13,51 +13,46 @@ plot_focal_process <-
   table_analysis %>% 
   melt(measure.vars=string_Focal_process, variable.name="Focal_process") %>% 
   filter(value=="1") %>% 
-  ggplot(aes(x = "", fill = fct_rev(fct_infreq(Focal_process)))) + 
-  geom_bar(position="fill") + 
-  scale_y_continuous(labels= scales::percent) + 
-  # assign fill colour according to [cols_foc_process] palette
-  scale_fill_manual(values=cols_foc_process[-3], labels= c("Information facilitation", "Negotiation", "Investigation", 
-                                                           "Adjudication", "Socialisation", "Support")) +
-  labs(x="", y="Proportion", fill="Process", title="(a) Focal company process")
+  ggplot(aes(y = fct_rev(fct_infreq(Focal_process)))) + 
+  geom_bar(fill= '#1F78B4') + 
+  scale_y_discrete(labels= c("Mediation", "Negotiation", "Info facilitation", "Support", 
+                             "Adjudication", "Socialisation", "Investigation")) +
+  labs(x="No. of cases", y="", fill="Process", title="(a) Focal company process") +
+  theme(title= element_text(size=10))
 # Fgiure 4b. direct supplier process
 plot_sup_process <-
   table_analysis %>%
   melt(measure.vars=string_Supplier_process, variable.name="Supplier_process") %>% 
   filter(value=="1") %>%
-  ggplot(aes(x="", fill=fct_rev(fct_infreq(Supplier_process)))) + geom_bar(position="fill") +
-  scale_y_continuous(labels=scales::percent) + 
-  # assign fill colour according to [cols_sup_process] palette
-  scale_fill_manual(values= cols_sup_process, labels=c("Information facilitation", "Negotiation", "Mediation", "Investigation", 
-                                                       "Adjudication", "Socialisation", "Support")) +
-  labs(x="", y="Proportion", fill="Process", title="(b) Direct supplier process")
+  ggplot(aes(y= fct_rev(fct_infreq(Supplier_process)))) + 
+  geom_bar(fill= '#1F78B4') +
+  scale_y_discrete(labels= c("Socialisation", "Support", "Mediation", "Negotiation",
+                             "Adjudication", "Investigation", "Info facilitation")) + 
+  labs(x="No. of cases", y="", title="(b) Direct supplier process") +
+  theme(title= element_text(size=10))
 # Figure 4c. focal company resolution action
 plot_focal_res <- 
   table_analysis %>%
   melt(measure.vars=string_Focal_resolution, variable.name='Focal_resolution_action') %>%
   filter(value=='1') %>% 
-  ggplot(aes(x="", fill=fct_rev(fct_infreq(Focal_resolution_action)))) + geom_bar(position="fill") +
-  scale_y_continuous(labels=scales::percent) +
-  # assign fill colour according to [cols_foc_resolution] palette
-  scale_fill_manual(values= cols_foc_resolution,
-                    breaks = c("FR_Improve_prac", "FR_Remedial", "FR_Coop_SCM", "FR_Re_entry", "FR_Coer_SCM"),
-                    labels=c("Improve company practice", "Remedial", "Coop SCM", "Re-entry", "Coer SCM")) +
-  labs(x="", y="Proportion", fill="Resolution action", title="(c) Focal company resolution action")
+  ggplot(aes(y= fct_rev(fct_infreq(Focal_resolution_action)))) + 
+  geom_bar(fill= '#1F78B4') +
+  scale_y_discrete(labels= c("Improve practice", "Remedial", "Coop SCM", "Re-entry", "Coer SCM")) +
+  labs(x="No. of cases", y= "", title="(c) Focal company resolution action") +
+  theme(title= element_text(size=10))
 # Figure 4d. direct supplier resolution action
 plot_sup_res <- 
   table_analysis %>%
   melt(measure.vars=string_Supplier_resolution, variable.name="Supplier_resolution") %>% 
   filter(value=="1") %>%
-  ggplot(aes(x="", fill=fct_rev(fct_infreq(Supplier_resolution)))) + geom_bar(position="fill") +
-  scale_y_continuous(labels=scales::percent) +
-  # assign fill colour according to [cols_sup_resolution] palette
-  scale_fill_manual(values=cols_sup_resolution, 
-                    breaks= c("SR_SSCM", "SR_Improve_prac", "SR_Policy", "SR_Remedial"),
-                    labels=c("Supply chain management", "Improve company practice", "Policy", "Remedial")) +
-  labs(x='', y='Proportion', fill='Resolution action', title='(d) Direct supplier resolution action')
+  ggplot(aes(y=fct_rev(fct_infreq(Supplier_resolution)))) + 
+  geom_bar(fill= '#1F78B4') +
+  scale_y_discrete(labels= c("SSCM", "Improve practice", "Policy", "Remedial")) +
+  labs(x='No. of cases', y='', title='(d) Direct supplier resolution action') +
+  theme(title= element_text(size=10))
 # Combined Figure 4
 ggarrange(plot_focal_process, plot_sup_process, plot_focal_res, plot_sup_res, 
-          ncol=2, nrow=2)
+          ncol=2, nrow=2, align='hv')
 
 # Figure 5, no. of cases related to engagement nature
 table_analysis %>% 

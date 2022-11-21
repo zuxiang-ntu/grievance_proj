@@ -181,7 +181,14 @@ table_analysis %>% # All sub-themes
   melt(measure.vars = string_subtheme, variable.name='Sub_theme') %>% filter(value=="1") %>% 
   group_by(Sub_theme) %>% summarise(Count = n()) %>%
   mutate(Percent = round((Count/sum(Count)*100), digits = 1)) %>% 
-  arrange(-Count) %>% write.csv(quote=F, row.names = F)
+  arrange(-Count) %>%
+  write.csv(quote=F, row.names=F)
+# Frequency table of sub-theme, grouped by theme
+table_analysis %>% # All sub-themes
+  melt(measure.vars = string_subtheme, variable.name='Sub_theme') %>% filter(value=="1") %>% 
+  group_by(Grievance_theme, Sub_theme) %>% summarise(Count = n()) %>%
+  mutate(Percent = round((Count/sum(Count)*100), digits = 1)) %>% 
+  write.csv(quote=F, row.names=F)
 # Frequency table of Issue
 table_analysis %>% # All issues
   melt(measure.vars = string_issue, variable.name="Issue") %>% 

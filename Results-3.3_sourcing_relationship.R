@@ -41,3 +41,4 @@ table_analysis %>%
   group_by(GC_sourcing, channel) %>% summarise(Count = n()) %>%
   mutate(Percent = round((Count/sum(Count)*100), digits = 1))  %>% 
   write.csv(quote=F, row.names = F)
+
