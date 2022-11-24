@@ -4,13 +4,13 @@
 table_analysis %>% 
   filter(Grievance_outcome != "NA", Complexity != "NA") %>%
   ggplot() + 
-  geom_violin(aes(x= Grievance_outcome, y= Complexity), fill= '#1F78B4') +
+  geom_violin(aes(x= Grievance_outcome, y= Complexity), fill= '#1F78B4', width= 1.2, alpha= 0.6) +
+  geom_boxplot(aes(x= Grievance_outcome, y= Complexity), width= 0.1, outlier.size= 2.5, alpha= 0.5) +
   scale_x_discrete(labels= scales::label_wrap(10)) +
   scale_y_continuous(n.breaks = 8) +
   labs(x= "Grievance outcome") +
   theme(axis.title.x = element_text(vjust = -0.5, size= 12), axis.text.x = element_text(size= 11.5), 
         axis.title.y = element_text(size= 12), axis.text.y= element_text(size=11.5))
-
 #####
 # Code for additional info
 # Mosaic plot with stats test
