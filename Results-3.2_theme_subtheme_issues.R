@@ -10,12 +10,12 @@ sub_theme <- table_analysis %>%
   select(Sub_theme)
 # colour palette for sub theme figures, Assign specific colours to sub theme table above
 cols <- setNames(c("#33A02C", "#B15928", "#FF7F00", "#FFFF99", "#FB9A99", 
-                   "#A6CEE3", "#B2DF8A", "#E31A1C", "#CAB2D6", "#6A3D9A"), levels(sub_theme)) 
+                   "#A6CEE3", "#B2DF8A", "#E31A1C", "#CAB2D6", "#6A3D9A"), levels(sub_theme$Sub_theme)) 
 # colour palette for issue figures. Assign specific colours to sub theme vector string
 cols2 <- setNames(c("#33A02C", "#B15928", "#FF7F00", "#FFFF99", "#FB9A99", 
                     "#A6CEE3", "#B2DF8A", "#E31A1C", "#CAB2D6", "#6A3D9A"), 
                   c("Deforestation", "Peat development", "Fire", "Biodiversity", "Pollution",
-                    "Labour", "Land", "Human rights abuse", "Community", "Corruption"))       
+                    "Labour", "Land", "Human rights abuse", "Community", "Corruption"))    
 
 # Figure 2a. No. of cases under env sub-theme
 env_sub_fig <- 
@@ -62,7 +62,8 @@ ggarrange(env_sub_fig, env_iss_fig,
           ncol= 2, common.legend = T)
 
 # Figure 2c. No. of cases under social sub-theme
-soc_sub_fig <- table_analysis %>% 
+soc_sub_fig <- 
+  table_analysis %>% 
   melt(measure.vars = string_subtheme, variable.name='Sub_theme') %>% 
   filter(value=="1", Grievance_theme == "Social") %>%
   ggplot(aes(y = fct_rev(fct_infreq(Sub_theme)), fill=Sub_theme)) + geom_bar() +
@@ -75,7 +76,8 @@ soc_sub_fig <- table_analysis %>%
   theme(axis.title = element_text(size = 12), axis.text = element_text(size=11.5),
         legend.title = element_text(size=12), legend.text = element_text(size=11.5))
 # Figure 2d. No. of cases under social issues
-soc_iss_fig <- table_analysis %>% 
+soc_iss_fig <- 
+  table_analysis %>% 
   melt(measure.vars=string_issue, variable.name="Issue") %>%
   filter(value=="1", Grievance_theme=="Social") %>%
   ggplot() + 
@@ -111,7 +113,7 @@ soc_iss_fig <- table_analysis %>%
         legend.title = element_text(size=12), legend.text = element_text(size=11.5))
 # Combined figure 2c-d. Full figure 2a-f will be combined again in powerpoint
 ggarrange(soc_sub_fig, soc_iss_fig, 
-          ncol= 2, common.legend = T)
+          ncol= 2, legend = 'none')
 
 # Figure 2e. No. of cases under both sub-theme
 both_sub_fig <- table_analysis %>% 
