@@ -1,6 +1,6 @@
 ## Results 3.2: Theme, sub-theme, issues
 
-# Figure 2a-f. 
+# Figure 3a-f. 
 # Data objects to create plot legend
 # table of sub themes 
 sub_theme <- table_analysis %>% 
@@ -17,7 +17,7 @@ cols2 <- setNames(c("#33A02C", "#B15928", "#FF7F00", "#FFFF99", "#FB9A99",
                   c("Deforestation", "Peat development", "Fire", "Biodiversity", "Pollution",
                     "Labour", "Land", "Human rights abuse", "Community", "Corruption"))    
 
-# Figure 2a. No. of cases under env sub-theme
+# Figure 3a. No. of cases under env sub-theme
 env_sub_fig <- 
   table_analysis %>%
   melt(measure.vars = string_subtheme, variable.name='Sub_theme') %>% 
@@ -31,7 +31,7 @@ env_sub_fig <-
   labs(y = 'Sub theme', x="No. of cases", fill="Sub-theme", title="(a)") +
   theme(axis.title = element_text(size = 12), axis.text = element_text(size=11.5),
         legend.title = element_text(size=12), legend.text = element_text(size=11.5))
-# Figure 2b. No. of cases under env issues
+# Figure 3b. No. of cases under env issues
 env_iss_fig <- table_analysis %>% 
   melt(measure.vars=string_issue, variable.name="Issue") %>%
   filter(value=="1", Grievance_theme=="Environmental") %>%
@@ -57,11 +57,11 @@ env_iss_fig <- table_analysis %>%
   labs(x = "No. of cases", y="Issue", fill="Sub-theme", title="(b)") +
   theme(axis.title = element_text(size = 12), axis.text = element_text(size=11.5),
         legend.title = element_text(size=12), legend.text = element_text(size=11.5))
-# Combined figure 2a-b. Full figure 2a-f will be combined again in powerpoint
+# Combined figure 3a-b. Full figure 2a-f will be combined again in powerpoint
 ggarrange(env_sub_fig, env_iss_fig,
           ncol= 2, common.legend = T)
 
-# Figure 2c. No. of cases under social sub-theme
+# Figure 3c. No. of cases under social sub-theme
 soc_sub_fig <- 
   table_analysis %>% 
   melt(measure.vars = string_subtheme, variable.name='Sub_theme') %>% 
@@ -75,7 +75,7 @@ soc_sub_fig <-
   labs(x= "No. of cases", y = 'Sub-theme', fill="Sub-theme", title="(c)") +
   theme(axis.title = element_text(size = 12), axis.text = element_text(size=11.5),
         legend.title = element_text(size=12), legend.text = element_text(size=11.5))
-# Figure 2d. No. of cases under social issues
+# Figure 3d. No. of cases under social issues
 soc_iss_fig <- 
   table_analysis %>% 
   melt(measure.vars=string_issue, variable.name="Issue") %>%
@@ -111,11 +111,11 @@ soc_iss_fig <-
   labs(x = "No. of cases", y="Issue", fill="Sub-theme", title="(d)") +
   theme(axis.title = element_text(size = 12), axis.text = element_text(size=11.5),
         legend.title = element_text(size=12), legend.text = element_text(size=11.5))
-# Combined figure 2c-d. Full figure 2a-f will be combined again in powerpoint
+# Combined figure 3c-d. Full figure 2a-f will be combined again in powerpoint
 ggarrange(soc_sub_fig, soc_iss_fig, 
           ncol= 2, legend = 'none')
 
-# Figure 2e. No. of cases under both sub-theme
+# Figure 3e. No. of cases under both sub-theme
 both_sub_fig <- table_analysis %>% 
   melt(measure.vars = string_subtheme, variable.name='Sub_theme') %>% 
   filter(value=="1", Grievance_theme == "Both") %>%
@@ -128,7 +128,7 @@ both_sub_fig <- table_analysis %>%
   labs(y = 'Sub-theme', x="No. of cases", fill="Sub-theme", title = "(e)") +
   theme(axis.title = element_text(size = 12), axis.text = element_text(size=11.5),
         legend.title = element_text(size=12), legend.text = element_text(size=11.5))
-# Figure 2f. No. of cases under both issues
+# Figure 3f. No. of cases under both issues
 both_iss_fig <- table_analysis %>% 
   melt(measure.vars=string_issue, variable.name="Issue") %>%
   filter(value=="1", Grievance_theme=="Both") %>%
@@ -167,7 +167,7 @@ both_iss_fig <- table_analysis %>%
   labs(x = "No. of cases", y="Issue", title="(f)", fill="Sub-theme") +
   theme(axis.title = element_text(size = 12), axis.text = element_text(size=11.5),
         legend.title = element_text(size=12), legend.text = element_text(size=11.5))
-# Combined Figure 2e-f. Full figure 2a-f will be combined again in powerpoint
+# Combined Figure 3e-f. Full figure 2a-f will be combined again in powerpoint
 ggarrange(both_sub_fig, both_iss_fig, 
           ncol= 2, common.legend = T)
 #####

@@ -1,15 +1,14 @@
 ## 3.5 Grievance outcomes and duration of grievance resolution 
 
-# Figure 6. No. cases related to grievance outcomes
+# Figure 7. No. cases related to grievance outcomes
 table_analysis %>% 
   filter(Grievance_outcome != "NA") %>%
-  ggplot(aes(y= fct_rev(fct_infreq(Grievance_outcome)), fill="color")) + geom_bar() + 
-  scale_fill_manual(values= '#1F78B4', guide="none") +
+  ggplot(aes(y= fct_rev(fct_infreq(Grievance_outcome)))) + 
+  geom_bar(fill= "#1F78B4") + 
   labs(x='No. of cases', y='Grievance outcomes') +
   theme(axis.title = element_text(size = 12), axis.text = element_text(size=11.5),
         legend.title = element_text(size=12), legend.text = element_text(size=11.5))
-
-# Figure 7. Frequency of cases based on duration of grievance resolution, with mean and median
+# Figure 8. Frequency of cases based on duration of grievance resolution, with mean and median
 table_analysis %>% 
   filter(Duration_lodged_closed != "NA") %>%
   ggplot(aes(x = Duration_lodged_closed)) + 

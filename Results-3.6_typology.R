@@ -9,7 +9,7 @@ table_analysis %>%
   mutate(Percent = round((100*n/sum(n)), digits = 1)) %>% 
   write.csv(quote=F, row.names=F) # copy and paste output to excel to further format the table and add a column for score
 
-# Figure 8. Summary of grievance complexity scores 
+# Figure 9. Summary of grievance complexity scores 
 table_analysis %>% 
   filter(Complexity != "NA") %>%
   ggplot() + 

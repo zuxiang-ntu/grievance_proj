@@ -1,6 +1,6 @@
 ## 3.4 Grievance processes, resolution actions, and supplier engagement  
 
-# Figure 4a-d.
+# Figure 5a-d.
 # Data objects for plot legend
 cols_foc_process <- setNames(brewer.pal(7, "Paired"), string_Focal_process)
 cols_sup_process <- setNames(brewer.pal(7, "Paired"), string_Supplier_process)
@@ -8,7 +8,7 @@ cols_foc_resolution <- setNames(c("#A6CEE3", "#B2DF8A", "#FECC5C", "#FD8D3C", "#
                                 c("FR_Remedial", "FR_Improve_prac", "FR_Coop_SCM", "FR_Coer_SCM", "FR_Re_entry"))
 cols_sup_resolution <- setNames(c("#A6CEE3", "#B2DF8A", "#FB9A99", "#FFFFB2"), 
                                 c("SR_Remedial", "SR_Improve_prac", "SR_Policy", "SR_SSCM"))
-# Figure 4a. focal company process
+# Figure 5a. focal company process
 plot_focal_process <- 
   table_analysis %>% 
   melt(measure.vars=string_Focal_process, variable.name="Focal_process") %>% 
@@ -19,7 +19,7 @@ plot_focal_process <-
                              "Adjudication", "Socialisation", "Investigation")) +
   labs(x="No. of cases", y="", fill="Process", title="(a) Focal company process") +
   theme(title= element_text(size=10))
-# Fgiure 4b. direct supplier process
+# Fgiure 5b. direct supplier process
 plot_sup_process <-
   table_analysis %>%
   melt(measure.vars=string_Supplier_process, variable.name="Supplier_process") %>% 
@@ -30,7 +30,7 @@ plot_sup_process <-
                              "Adjudication", "Investigation", "Info facilitation")) + 
   labs(x="No. of cases", y="", title="(b) Direct supplier process") +
   theme(title= element_text(size=10))
-# Figure 4c. focal company resolution action
+# Figure 5c. focal company resolution action
 plot_focal_res <- 
   table_analysis %>%
   melt(measure.vars=string_Focal_resolution, variable.name='Focal_resolution_action') %>%
@@ -40,7 +40,7 @@ plot_focal_res <-
   scale_y_discrete(labels= c("Improve practice", "Remedial", "Coop SCM", "Re-entry", "Coer SCM")) +
   labs(x="No. of cases", y= "", title="(c) Focal company resolution action") +
   theme(title= element_text(size=10))
-# Figure 4d. direct supplier resolution action
+# Figure 5d. direct supplier resolution action
 plot_sup_res <- 
   table_analysis %>%
   melt(measure.vars=string_Supplier_resolution, variable.name="Supplier_resolution") %>% 
@@ -54,7 +54,7 @@ plot_sup_res <-
 ggarrange(plot_focal_process, plot_sup_process, plot_focal_res, plot_sup_res, 
           ncol=2, nrow=2, align='hv')
 
-# Figure 5, no. of cases related to engagement nature
+# Figure 6, no. of cases related to engagement nature
 table_analysis %>% 
   ggplot(aes(y= fct_rev(fct_infreq(Engagement_nature)))) + 
   geom_bar(fill= "#1F78B4") + 
