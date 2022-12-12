@@ -1,8 +1,9 @@
 ## Code to create dataframe table from csv file that will be used for analysis. Also has data objects to help
 ## reshape data from wide to long format
 
-# Packages used 
+# Packages used
 library(readxl)   # read excel
+library(openxlsx)     # export to excel
 library(tidyverse)# core functions, cite
 library(rlang)    # support tidyverse features
 library(ggpubr)   # arrange multiple plots in single figure
@@ -19,10 +20,32 @@ library(nnet) # conduct multinomial regression
 library(readr)
 library(sjstats) 
 
-# Import excel database
-mydata <- read_excel("C:\\Users\\ASEuser\\OneDrive - Nanyang Technological University\\NTU RA\\Grievance Database-Project docs\\GrievanceProcedure_v2_20221111.xlsx")
+# Data string for melting to long format
+string_subtheme <- c('ST_deforestation', 'ST_peat_development', 'ST_fire',
+                     'ST_biodiversity', 'ST_pollution', 'ST_labour',
+                     'ST_land', 'ST_human_rights', 'ST_community', 'ST_corruption')
+string_issue <- c('IS_deforestation', 'IS_source_conflict_oil','IS_deforestation_prep','IS_peat_development',
+                  'IS_forest_burning', 'IS_peatland_burning', 'IS_forest_fire',
+                  'IS_habitat_loss', 'IS_wildlife_threat', 'IS_pollution',
+                  'IS_wage_remuneration', 'IS_health_safety', 'IS_social_security', 'IS_employment_security',
+                  'IS_freedom_association', 'IS_forced_labour', 'IS_child_labour',
+                  'IS_land_grabbing', 'IS_land_contestation', 'IS_illegal_land_use',
+                  'IS_intimidation', 'IS_violence', 'IS_eviction', 
+                  'IS_FPIC', 'IS_smallholder', 'IS_community_development',
+                  'IS_bribery', 'IS_tax_evasion', 'IS_obstruction_of_justice')
+string_Focal_process <- c('FP_info_facil', 'FP_negotiation', 'FP_mediation','FP_investigation',
+                          'FP_adjudication', 'FP_socialisation', 'FP_support')
+string_Focal_resolution <- c('FR_Remedial', 'FR_Improve_prac', 'FR_Coop_SCM', 'FR_Coer_SCM', 'FR_Re_entry')
+string_Supplier_process <- c('SP_info_facil', 'SP_negotiation', 'SP_mediation', 'SP_investigation',
+                             'SP_adjudication', 'SP_socialisation', 'SP_support')
+string_Supplier_resolution <- c('SR_Remedial', 'SR_Improve_prac', 'SR_Policy', 'SR_SSCM')
 
-# Create table for analysis. This dataset is used for all subsequent analysis. 
+# Import excel database
+mydata <- read_excel("C:\\Users\\ASEuser\\OneDrive - Nanyang Technological University\\NTU RA\\Grievance Database-Project docs\\GrievanceProcedure_v2_20221118.xlsx")
+
+# Create table for analysis. 
+# This dataset is used for all subsequent analysis. An excel file of this table is also available to import
+# into R session for data analysis. 
 table_analysis <- mydata %>%
   transmute(ID = UID, Company = COMPANY, Status = STATUS, Country = COUNTRY, Grievance_raiser = `GRIEVANCE RAISER`, GR_type = `GRIEVANCE RAISER TYPE`,
             Acc_foc_rs = `ACCUSED TO FOCAL RELATIONSHIP`, Int_foc_rs = `INTERMEDIATE COMPANY RELATIONSHIP`,
@@ -73,23 +96,3 @@ table_analysis <- table_analysis %>%
 table_analysis <-
   table_analysis %>%
   filter(Company != "NA")
-
-# Data string for melting to long format
-string_subtheme <- c('ST_deforestation', 'ST_peat_development', 'ST_fire',
-                     'ST_biodiversity', 'ST_pollution', 'ST_labour',
-                     'ST_land', 'ST_human_rights', 'ST_community', 'ST_corruption')
-string_issue <- c('IS_deforestation', 'IS_source_conflict_oil','IS_deforestation_prep','IS_peat_development',
-                  'IS_forest_burning', 'IS_peatland_burning', 'IS_forest_fire',
-                  'IS_habitat_loss', 'IS_wildlife_threat', 'IS_pollution',
-                  'IS_wage_remuneration', 'IS_health_safety', 'IS_social_security', 'IS_employment_security',
-                  'IS_freedom_association', 'IS_forced_labour', 'IS_child_labour',
-                  'IS_land_grabbing', 'IS_land_contestation', 'IS_illegal_land_use',
-                  'IS_intimidation', 'IS_violence', 'IS_eviction', 
-                  'IS_FPIC', 'IS_smallholder', 'IS_community_development',
-                  'IS_bribery', 'IS_tax_evasion', 'IS_obstruction_of_justice')
-string_Focal_process <- c('FP_info_facil', 'FP_negotiation', 'FP_mediation','FP_investigation',
-                          'FP_adjudication', 'FP_socialisation', 'FP_support')
-string_Focal_resolution <- c('FR_Remedial', 'FR_Improve_prac', 'FR_Coop_SCM', 'FR_Coer_SCM', 'FR_Re_entry')
-string_Supplier_process <- c('SP_info_facil', 'SP_negotiation', 'SP_mediation', 'SP_investigation',
-                             'SP_adjudication', 'SP_socialisation', 'SP_support')
-string_Supplier_resolution <- c('SR_Remedial', 'SR_Improve_prac', 'SR_Policy', 'SR_SSCM')
